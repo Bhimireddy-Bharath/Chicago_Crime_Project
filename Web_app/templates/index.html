@@ -1,0 +1,165 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Chicago Crime Dashboard</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial;background:#f4f6f9;color:#172033}
+aside{position:fixed;inset:0 auto 0 0;width:215px;background:#172033;color:#fff;padding:24px}
+aside h2{margin:0 0 8px}aside p{font-size:13px;color:#bdc7d7;margin-bottom:25px}
+.nav{display:block;width:100%;padding:11px;margin:6px 0;border:0;border-radius:7px;text-align:left;background:transparent;color:#fff;cursor:pointer}
+.nav:hover,.nav.active{background:#2b3952}main{margin-left:215px;padding:30px;max-width:1350px}
+h1{font-size:34px;margin:0 0 7px}h2{margin-top:25px}.sub{color:#687386;margin-bottom:24px}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}.card,.chart,.form,.tablebox{background:#fff;border:1px solid #e0e5ec;border-radius:10px;padding:18px}
+.label{font-size:12px;color:#718096;text-transform:uppercase}.value{font-size:27px;font-weight:bold;margin-top:7px}
+.chart{margin:18px 0;text-align:center}.chart img{max-width:760px;width:100%;height:auto}
+.tablebox{margin-top:15px;overflow:auto}table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:9px;border-bottom:1px solid #e7ebf0;text-align:left;white-space:nowrap}th{background:#f7f8fa}
+input{padding:10px;border:1px solid #ccd4df;border-radius:6px;margin:4px}.btn{padding:10px 14px;border:0;border-radius:6px;background:#243b5a;color:#fff;cursor:pointer}.danger{background:#a33a3a}
+
+.data-info{background:#fff;border:1px solid #e0e5ec;border-radius:10px;padding:20px;margin-top:20px}
+.data-info h2{margin:0 0 10px;font-size:22px}.data-info p{color:#5e697a;line-height:1.6}
+.info-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+.info-grid div,.show-list div{background:#f7f8fa;border-radius:8px;padding:13px}
+.info-grid b,.show-list b{display:block;margin-bottom:5px}.info-grid span,.show-list span{font-size:13px;color:#667085}
+.show-list{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.about-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+@media(max-width:900px){.info-grid{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:600px){.info-grid,.show-list,.about-grid{grid-template-columns:1fr}}
+.hidden{display:none}.msg{padding:10px;margin:12px 0;background:#edf5ff;border-radius:6px}
+@media(max-width:800px){aside{position:relative;width:100%;height:auto}main{margin-left:0}.cards{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<aside>
+<h2>🏙️ Chicago Crime</h2><p>Flask REST Dashboard</p>
+<button class="nav active" onclick="show('home',this)">Dashboard</button>
+<button class="nav" onclick="show('pattern',this)">Crime Pattern</button>
+<button class="nav" onclick="show('intensity',this)">Crime Intensity</button>
+<button class="nav" onclick="show('database',this)">Database Analysis</button>
+<button class="nav" onclick="show('crud',this)">Manage Records</button>
+<button class="nav" onclick="show('about',this)">About</button>
+</aside>
+<main>
+<section id="home"><h1>Chicago Crime Intelligence</h1><div class="sub">Flask + REST API + SQLite</div>
+<div class="cards">
+<div class="card"><div class="label">Database</div><div id="db" class="value">Checking...</div></div>
+<div class="card"><div class="label">Total Records</div><div id="total" class="value">-</div></div>
+<div class="card"><div class="label">API</div><div class="value">REST</div></div>
+</div>
+
+<div class="data-info">
+<h2>About the Data</h2>
+<p>This dashboard presents analysis of the Chicago Crime Dataset stored in a SQLite database. The records are used to examine crime patterns, crime intensity, community-level distribution and arrest-related trends.</p>
+<div class="info-grid">
+<div><b>Dataset</b><span>Chicago Crime Dataset</span></div>
+<div><b>Storage</b><span>SQLite Database</span></div>
+<div><b>Location</b><span>Chicago</span></div>
+<div><b>Analysis</b><span>Crime patterns, intensity and arrests</span></div>
+<div><b>Crime Details</b><span>Crime type, description and case information</span></div>
+<div><b>Geographical Details</b><span>District and community information</span></div>
+<div><b>Indicators</b><span>Arrest and domestic-related information</span></div>
+<div><b>Operations</b><span>Read, Create, Update and Delete</span></div>
+</div>
+</div>
+
+<div class="data-info">
+<h2>What This Dashboard Shows</h2>
+<div class="show-list">
+<div><b>Crime Pattern</b><span>Major crime categories, time-based patterns, community distribution and arrest analysis.</span></div>
+<div><b>Crime Intensity</b><span>Crime occurrence by hour and community area.</span></div>
+<div><b>Database Analysis</b><span>Crime and arrest comparisons, arrest-rate analysis and category-level results.</span></div>
+<div><b>Manage Records</b><span>CRUD operations using the Flask REST API and SQLite database.</span></div>
+</div>
+</div>
+</section>
+
+<section id="pattern" class="hidden"><h1>Crime Pattern</h1><div class="sub">Use Case II outputs</div><div id="patternGraphs"></div></section>
+<section id="intensity" class="hidden"><h1>Crime Intensity</h1><div class="sub">Use Case III outputs</div><div id="intensityGraphs"></div></section>
+<section id="database" class="hidden"><h1>Database Analysis</h1><div class="sub">Use Case IV outputs</div><div id="databaseGraphs"></div></section>
+
+<section id="crud" class="hidden"><h1>Manage Records</h1><div class="sub">CRUD through REST API</div>
+<div class="form"><input id="search" placeholder="Search case number">
+<button class="btn" onclick="loadRecords()">Search</button>
+<button class="btn" onclick="editor()">Create Record</button></div>
+<div id="message"></div><div class="tablebox"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table></div>
+<div id="editbox" class="form hidden"><h3 id="editTitle"></h3><div id="fields"></div>
+<button class="btn" onclick="save()">Save</button><button class="btn" onclick="closeEditor()">Cancel</button></div>
+</section>
+
+<section id="about" class="hidden">
+<h1>About</h1><div class="sub">Project and data overview</div>
+<div class="about-grid">
+<div class="card">
+<h2>Chicago Crime Intelligence</h2>
+<p>A simple web-based dashboard for exploring Chicago crime data through visual analysis and database operations.</p>
+<h3>Purpose</h3>
+<p>The application provides a clear view of crime patterns, crime intensity, community-level analysis and arrest-related results while allowing records to be managed through REST API endpoints.</p>
+</div>
+<div class="card">
+<h2>Data Overview</h2>
+<p><b>Dataset:</b> Chicago Crime Dataset</p>
+<p><b>Database:</b> SQLite</p>
+<p><b>Data focus:</b> Crime records and related crime attributes</p>
+<p><b>Analysis areas:</b> Time, crime category, community and arrests</p>
+<p><b>Operations:</b> Create, Read, Update and Delete</p>
+</div>
+<div class="card">
+<h2>Technology Used</h2>
+<p><b>Backend:</b> Flask</p>
+<p><b>API:</b> REST API</p>
+<p><b>Database:</b> SQLite</p>
+<p><b>Frontend:</b> HTML, CSS and JavaScript</p>
+<p><b>Visuals:</b> Existing analysis graph images</p>
+</div>
+<div class="card">
+<h2>Contact Information</h2>
+<p><b>Name:</b> Bhimireddy Bharath Kumar Reddy</p>
+<p><b>Email:</b> contact.bharath@gmail.com</p>
+<p><b>Phone:</b> +12 964581656</p>
+</div>
+</div>
+</section>
+</main>
+<script>
+const G={
+pattern:[
+["01","Total Number of Crimes by Year","Use_case_II_Total_no_of_crimes_01.png"],
+["02","Top 10 Crime Categories","Use_case_II_Top_10_categories_02.png"],
+["03","Crime by Month and Day of Week","Use_case_II_crime_by_month_day_04.png"],
+["04","Community Area Analysis","Use_case_II_Top_10_community_05.png"],
+["05","Arrest Analysis","Use_case_II_Arrest_analysis_03.png"]],
+intensity:[
+["01","Number of Crimes by Hour","Use_case_III_No_of_crimes_hourly_01.png"],
+["02","Crime Count by Community Area","Use_case_III_Crime_count_community_02.png"]],
+database:[
+["01","Crimes vs Arrests Per Year","Use_case_IV_Crime_vs_Arrests_01.png"],
+["02","Arrest Rate Per Year","Use_case_IV_Arrest_rate_02.png"],
+["03","Crime by Category","Use_case_IV_VW_crime_by_category_03.png"]]};
+
+function show(id,b){
+document.querySelectorAll("main>section").forEach(x=>x.classList.add("hidden"));
+document.getElementById(id).classList.remove("hidden");
+document.querySelectorAll(".nav").forEach(x=>x.classList.remove("active"));b.classList.add("active");
+if(G[id]) draw(id);if(id==="crud")loadRecords();}
+function draw(id){let box=document.getElementById(id+"Graphs");if(box.dataset.done)return;
+box.innerHTML=G[id].map(g=>`<div class="chart"><h3>${g[0]} · ${g[1]}</h3><img src="/graphs/${encodeURIComponent(g[2])}"></div>`).join("");box.dataset.done=1;}
+
+async function status(){try{let r=await fetch("/api/status"),d=await r.json();db.textContent=d.connected?"Connected":"Error";total.textContent=d.records??"-";}catch(e){db.textContent="Error";}}
+let editId=null;
+async function loadRecords(){let q=search.value,r=await fetch("/api/crimes?limit=50&search="+encodeURIComponent(q)),d=await r.json();
+if(!Array.isArray(d)){msg(d.error);return}let k=d.length?Object.keys(d[0]):[];
+thead.innerHTML="<tr>"+k.map(x=>`<th>${x}</th>`).join("")+"<th>Actions</th></tr>";
+tbody.innerHTML=d.map(x=>`<tr>${k.map(y=>`<td>${x[y]??""}</td>`).join("")}<td><button class="btn" onclick="edit(${x.id})">Edit</button> <button class="btn danger" onclick="del(${x.id})">Delete</button></td></tr>`).join("");}
+async function edit(id){let r=await fetch("/api/crimes/"+id);editor(await r.json(),"Update Record");editId=id;}
+function editor(data={},title="Create Record"){editId=data.id||null;editTitle.textContent=title;
+let f=["case_number","date","block","primary_type","description","arrest","domestic","district_code","community_code"];
+fields.innerHTML=f.map(x=>`<input id="f_${x}" placeholder="${x.replaceAll("_"," ")}" value="${data[x]??""}">`).join("");editbox.classList.remove("hidden");}
+function closeEditor(){editbox.classList.add("hidden")}
+async function save(){let f=["case_number","date","block","primary_type","description","arrest","domestic","district_code","community_code"],d={};
+f.forEach(x=>{let v=document.getElementById("f_"+x).value;if(v!=="")d[x]=v});
+let r=await fetch(editId?"/api/crimes/"+editId:"/api/crimes",{method:editId?"PUT":"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(d)}),x=await r.json();msg(x.message||x.error);if(r.ok){closeEditor();loadRecords();status();}}
+async function del(id){if(!confirm("Delete record "+id+"?"))return;let r=await fetch("/api/crimes/"+id,{method:"DELETE"}),d=await r.json();msg(d.message||d.error);if(r.ok){loadRecords();status();}}
+function msg(x){message.innerHTML=`<div class="msg">${x}</div>`} status();
+</script>
+</body></html>
